@@ -1,0 +1,6 @@
+<svg version="1.1" baseProfile="full" width="100px" height="100px" xmlns="http://www.w3.org/2000/svg">
+  <line x1="35" y1="25" x2="35" y2="75" stroke-linejoin="round"
+    style="stroke: white; stroke-width: 6.67px;"/>
+  <line x1="65" y1="25" x2="65" y2="75" stroke-linejoin="round"
+    style="stroke: white; stroke-width: 6.67px;"/>
+</svg>

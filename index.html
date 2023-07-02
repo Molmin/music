@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title id="title">音乐播放器 Demo</title>
+  <script src="https://topan-dev.github.io/TopanUI/src/jquery.js"></script>
+  <script src="https://kit.fontawesome.com/0d8081718e.js" crossorigin="anonymous"></script>
+  <style>
+    audio.topan-music {
+      display: none;
+    }
+
+    div.topan-music-display {
+      background-color: var(--topan-colors-main);
+      height: 34px;
+      width: 100%;
+      padding: 7px;
+    }
+
+    body {
+      --topan-colors-main: rgb(63, 94, 160);
+      --topan-colors-main-modify1: rgb(63, 94, 160, 0.08);
+      --topan-colors-main-modify2: rgb(104, 136, 199);
+      --topan-colors-stress: rgb(206, 52, 129);
+      --topan-colors-stress-modify1: rgb(206, 52, 129, 0.3);
+      margin: 0;
+    }
+
+    .test {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+    }
+
+    .topan-music-display-start {
+      border-radius: 50%;
+      box-sizing: content-box;
+      width: 30px;
+      height: 30px;
+      border: solid 2px white;
+      background: transparent;
+      padding: 0;
+      transition-duration: 0.3s;
+      transition-property: all;
+    }
+
+    .topan-music-display-start:hover {
+      background: rgba(255, 255, 255, 0.1)
+    }
+
+    .topan-music-ico-start {
+      content: url('./start.svg');
+      width: 30px;
+      height: 30px;
+    }
+
+    .topan-music-ico-pause {
+      content: url('./pause.svg');
+      width: 30px;
+      height: 30px;
+    }
+  </style>
+  <script>
+    // http://music.163.com/song/media/outer/url?id=#
+    // http://music.163.com/api/song/lyric?os=pc&id=#&lv=-1&kv=-1&tv=-1
+    const lrcfile = `[ar:演唱者]
+[al:本歌所在的专辑]
+[ti:本歌的标题]
+[au:歌词作者]
+[length:本歌的长度]
+[by:此LRC文件的创建者]
+[offset:+/- 以毫秒为单位歌词时间点偏移量，+，时间点后移，-，时间点前移]
+[re:创建此LRC文件的播放器或编辑器]
+
+[00:00.000] 作词 : 米果
+[00:01.000] 作曲 : 高橋優
+[00:02.000] 编曲 : 池窪浩一 (Kouichi Ikekubo)
+[00:25.237]这一路上走走停停
+[00:28.592]顺着少年漂流的痕迹
+[00:31.681]迈出车站的前一刻
+[00:34.795]竟有些犹豫
+[00:37.794]不禁笑这近乡情怯
+[00:41.191]仍无可避免
+[00:43.819]而长野的天
+[00:45.134]依旧那么暖
+[00:46.684]风吹起了从前
+[00:49.153]从前初识这世间
+[00:52.185]万般流连
+[00:53.962]看着天边似在眼前
+[00:56.798]也甘愿赴汤蹈火去走它一遍
+[01:01.966]如今走过这世间
+[01:05.001]万般流连
+[01:06.632]翻过岁月不同侧脸
+[01:09.861]措不及防闯入你的笑颜
+[01:15.513]我曾难自拔于世界之大
+[01:19.605]也沉溺于其中梦话
+[01:22.837]不得真假 不做挣扎 不惧笑话
+[01:28.501]我曾将青春翻涌成她
+[01:31.930]也曾指尖弹出盛夏
+[01:35.281]心之所动 且就随缘去吧
+[01:41.156]逆着光行走 任风吹雨打
+[01:58.028]短短的路走走停停
+[02:01.171]也有了几分的距离
+[02:04.236]不知抚摸的是故事 还是段心情
+[02:10.711]也许期待的不过是 与时间为敌
+[02:16.193] 再次看到你
+[02:17.991]微凉晨光里
+[02:19.556]笑得很甜蜜
+[02:22.116]  从前初识这世间
+[02:24.937]万般流连
+[02:26.663]看着天边似在眼前
+[02:29.616]也甘愿赴汤蹈火去走它一遍
+[02:34.711]如今走过这世间
+[02:37.657]万般流连
+[02:39.389]翻过岁月不同侧脸
+[02:42.360]措不及防闯入你的笑颜
+[02:48.265]我曾难自拔于世界之大
+[02:52.336]也沉溺于其中梦话
+[02:55.538]不得真假 不做挣扎 不惧笑话
+[03:01.140]我曾将青春翻涌成她
+[03:05.235]也曾指尖弹出盛夏
+[03:08.062]心之所动 且就随缘去吧
+[03:39.324]晚风吹起你鬓间的白发
+[03:43.574]抚平回忆留下的疤
+[03:46.788]你的眼中 明暗交杂 一笑生花
+[03:52.294]暮色遮住你蹒跚的步伐
+[03:56.330]走进床头藏起的画
+[03:59.544]画中的你 低着头说话
+[04:05.074]我仍感叹于世界之大
+[04:08.784]也沉醉于儿时情话
+[04:12.150]不剩真假 不做挣扎 无谓笑话
+[04:17.925]我终将青春还给了她
+[04:21.677]连同指尖弹出的盛夏
+[04:25.007]心之所动 就随风去了
+[04:30.601]以爱之名 你还愿意吗
+[04:38.541]
+[04:43.799]吉他：池窪浩一 (Kouichi Ikekubo)
+[04:49.057]贝斯：小島剛広 (Takehiro Kojima)
+[04:54.315]鼓：吉田佳史 (TRICERATOPS) (Yoshifumi Yoshida(TRICERATOPS))
+[04:59.573]键盘：平畑徹也 (Tetsuya Hirahata)
+[05:04.831]小提琴：須磨和声 (Wasei Suma)
+[05:10.089]弦乐：須磨和声/池窪浩一
+[05:15.347]录音工程：玉乃井光紀 (Mitsunori Tamanoi) - studioFine
+[05:20.605]发行：Negia Entertainment Inc.
+[05:25.863]特别支持：中村光雄 (Mitsuo Nakamura)
+`;
+    async function LRCParser(lrc) {
+      var tmp = new Array(), result;
+      {
+        var lines = lrc.split('\n');
+        for (var i = 0; i < lines.length; i++) {
+          lines[i] = lines[i].trim();
+          if (lines[i].length >= 1) tmp.push(lines[i]);
+        }
+      }
+      for (var i = 0; i < tmp.length; i++) {
+        var TagMatcher = /\[([a-zA-Z0-9]*?):(.*?)\]/g, match;
+        while (match = TagMatcher.exec(tmp[i]))
+          console.log(match[1], match[2]);
+        var words = tmp[i].replace(/\[[a-zA-Z0-9]*?:.*?\]/, '').trim();
+        console.log(words);
+      }
+      return tmp;
+    }
+    $(document).ready(async () => {
+      var lrc = await LRCParser(lrcfile);
+      console.log(lrc);
+      var mymusic = $('.topan-music')[0];
+      $('.topan-music-display-start').click(() => {
+        if (mymusic.paused) {
+          mymusic.play();
+          $('.topan-music-display-start').html('<i class="topan-music-ico-pause"></i>');
+        }
+        else {
+          mymusic.pause();
+          $('.topan-music-display-start').html('<i class="topan-music-ico-start"></i>');
+        }
+      });
+    });
+  </script>
+</head>
+
+<body>
+  <div class="test">
+    <audio class="topan-music" controls>
+      <source src="http://music.163.com/song/media/outer/url?id=1330348068" type="audio/mpeg">
+    </audio>
+    <div class=""></div>
+    <div class="topan-music-display">
+      <span></span>
+      <button class="topan-music-display-start">
+        <i class="topan-music-ico-start"></i>
+      </button>
+      <span></span>
+    </div>
+  </div>
+</body>
+
+</html>
