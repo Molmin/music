@@ -12,6 +12,22 @@
       display: none;
     }
 
+    div.topan-music-lyric {
+      height: calc(100% - 68px);
+      width: 100%;
+    }
+
+    div.topan-music-lyric>div {
+      height: calc(100% - 20px);
+      margin: 20px;
+      overflow-y: auto;
+    }
+
+    div.topan-music-lyric>div>p {
+      text-align: center;
+      color: rgb(90, 90, 90);
+    }
+
     div.topan-music-display {
       background-color: var(--topan-colors-main);
       height: 34px;
@@ -146,8 +162,10 @@
 [05:20.605]发行：Negia Entertainment Inc.
 [05:25.863]特别支持：中村光雄 (Mitsuo Nakamura)
 `;
+    const allowMessages = ['al', 'ti', 'au', 'length', 'by', 'offset', 're'];
     async function LRCParser(lrc) {
-      var tmp = new Array(), result;
+      var tmp = new Array(), result = new Array(), configuration = {};
+      const TagMatcher = /\[([a-zA-Z0-9]*?):(.*?)\]/g;
       {
         var lines = lrc.split('\n');
         for (var i = 0; i < lines.length; i++) {
@@ -156,17 +174,37 @@
         }
       }
       for (var i = 0; i < tmp.length; i++) {
-        var TagMatcher = /\[([a-zA-Z0-9]*?):(.*?)\]/g, match;
-        while (match = TagMatcher.exec(tmp[i]))
-          console.log(match[1], match[2]);
+        var match, times = new Array();
+        while (match = TagMatcher.exec(tmp[i])) {
+          if (allowMessages.includes(match[1]))
+            configuration[match[1]] = match[2];
+          else if (/\d*/.test(match[1]) && /^-?\d+([\.:]\d+)?$/.test(match[2])) {
+            if (match[2].includes(':'))
+              match[2] = match[2].replace(/:(\d+)$/, (res, $1) => {
+                if ($1.length > 3) $1 = String(Number($1) % 1000);
+                while ($1.length < 3) $1 = `0${$1}`;
+                return `.${$1}`;
+              });
+            var time = Math.floor((Number(match[1]) * 60 + Number(match[2])) * 1000);
+            times.push(time);
+          }
+        }
         var words = tmp[i].replace(/\[[a-zA-Z0-9]*?:.*?\]/, '').trim();
-        console.log(words);
+        if (times.length > 0) for (var time of times)
+          result.push({ time, words });
       }
-      return tmp;
+      result = { lyric: result.sort((a, b) => a.time - b.time), configuration };
+      return result;
     }
     $(document).ready(async () => {
       var lrc = await LRCParser(lrcfile);
       console.log(lrc);
+      {
+        var html = ``;
+        for (var lyric of lrc.lyric)
+          html += `<p>${lyric.words}</p>`;
+        $('.topan-music-lyric>div').html(html);
+      }
       var mymusic = $('.topan-music')[0];
       $('.topan-music-display-start').click(() => {
         if (mymusic.paused) {
@@ -187,7 +225,9 @@
     <audio class="topan-music" controls>
       <source src="http://music.163.com/song/media/outer/url?id=1330348068" type="audio/mpeg">
     </audio>
-    <div class=""></div>
+    <div class="topan-music-lyric">
+      <div></div>
+    </div>
     <div class="topan-music-display">
       <span></span>
       <button class="topan-music-display-start">
