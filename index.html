@@ -23,9 +23,28 @@
       overflow-y: auto;
     }
 
+    div.topan-music-lyric>div::after {
+      position: absolute;
+      content: '';
+      width: calc(100% - 40px);
+      height: calc(100% - 40px - 48px);
+      top: 0;
+      left: 0;
+      margin: 20px;
+      box-shadow: 0 0 50px 0 rgba(255, 255, 255, .7) inset;
+    }
+
     div.topan-music-lyric>div>p {
       text-align: center;
       color: rgb(90, 90, 90);
+      transition-duration: 0.3s;
+      transition-property: all;
+    }
+
+    div.topan-music-lyric>div>p.topan-music-lyric-playing {
+      color: rgb(50, 132, 199);
+      font-weight: bold;
+      font-size: 110%;
     }
 
     div.topan-music-display {
@@ -196,8 +215,21 @@
       result = { lyric: result.sort((a, b) => a.time - b.time), configuration };
       return result;
     }
+    var lrcContainer, nowdisplayLyric = 0;
+    async function gotoLyric(id) {
+      $('div.topan-music-lyric>div>p.topan-music-lyric-playing')
+        .removeClass('topan-music-lyric-playing');
+      lrcContainer.find(`p:nth-child(${id + 1})`).addClass('topan-music-lyric-playing');
+      lrcContainer.animate({
+        scrollTop: lrcContainer.find(`p:nth-child(${id + 1})`).offset().top
+          - lrcContainer.get(0).offsetHeight / 2.0
+          + lrcContainer.find(`p:nth-child(${id + 1})`).get(0).offsetHeight / 2.0
+          - lrcContainer.offset().top + lrcContainer.scrollTop()
+      }, 500);
+    }
     $(document).ready(async () => {
       var lrc = await LRCParser(lrcfile);
+      lrcContainer = $('.topan-music-lyric>div');
       console.log(lrc);
       {
         var html = ``;
@@ -216,6 +248,15 @@
           $('.topan-music-display-start').html('<i class="topan-music-ico-start"></i>');
         }
       });
+      setInterval(async () => {
+        var currentTime = mymusic.currentTime * 1000;
+        var now = 0; while (now + 1 < lrc.lyric.length
+          && currentTime > lrc.lyric[now + 1].time) now++;
+        if (now != nowdisplayLyric) {
+          nowdisplayLyric = now;
+          gotoLyric(now);
+        }
+      }, 10);
     });
   </script>
 </head>
